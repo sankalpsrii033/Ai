@@ -1,0 +1,1785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aether Journal — AI Trading Journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- KaTeX for math, formulas, and special symbols -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  :root {
+    --bg: #0b0f14;
+    --bg-elevated: #111820;
+    --bg-card: #151c26;
+    --bg-hover: #1a2330;
+    --border: #243044;
+    --border-light: #2d3b52;
+    --text: #e8eef7;
+    --text-muted: #8b9bb4;
+    --text-dim: #5c6b82;
+    --accent: #3b82f6;
+    --accent-soft: rgba(59,130,246,0.15);
+    --green: #22c55e;
+    --green-soft: rgba(34,197,94,0.12);
+    --red: #ef4444;
+    --red-soft: rgba(239,68,68,0.12);
+    --amber: #f59e0b;
+    --purple: #a855f7;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 8px 32px rgba(0,0,0,0.4);
+    --font: 'Inter', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    line-height: 1.5;
+  }
+
+  /* ===== LAYOUT ===== */
+  .app {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    min-height: 100vh;
+  }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    background: var(--bg-elevated);
+    border-right: 1px solid var(--border);
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 8px 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 16px;
+  }
+  .logo-text { font-weight: 600; font-size: 17px; letter-spacing: -0.3px; }
+  .logo-sub { font-size: 11px; color: var(--text-muted); font-weight: 400; }
+
+  .nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 14px;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+  }
+  .nav-item:hover { background: var(--bg-hover); color: var(--text); }
+  .nav-item.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .nav-item svg { width: 18px; height: 18px; opacity: 0.85; }
+
+  .sidebar-footer {
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-dim);
+    text-align: center;
+  }
+
+  /* ===== MAIN ===== */
+  .main {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .topbar {
+    height: 64px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    background: var(--bg-elevated);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .page-title { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+  .topbar-actions { display: flex; gap: 12px; align-items: center; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    font-family: var(--font);
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+  .btn-primary:hover { background: #2563eb; }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { background: var(--bg-hover); color: var(--text); }
+  .btn-success { background: var(--green); color: white; }
+  .btn-danger { background: var(--red); color: white; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .content {
+    padding: 28px;
+    flex: 1;
+  }
+
+  /* ===== CARDS & STATS ===== */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+  }
+  .stat-label { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.4px; }
+  .stat-value { font-size: 24px; font-weight: 600; font-family: var(--mono); letter-spacing: -0.5px; }
+  .stat-value.positive { color: var(--green); }
+  .stat-value.negative { color: var(--red); }
+  .stat-sub { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-title { font-size: 15px; font-weight: 600; }
+  .card-body { padding: 20px; }
+
+  /* ===== TRADE TABLE ===== */
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  th {
+    text-align: left;
+    padding: 12px 16px;
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-elevated);
+  }
+  td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg-hover); }
+  .badge {
+    display: inline-flex;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 600;
+  }
+  .badge-long { background: var(--green-soft); color: var(--green); }
+  .badge-short { background: var(--red-soft); color: var(--red); }
+  .badge-win { background: var(--green-soft); color: var(--green); }
+  .badge-loss { background: var(--red-soft); color: var(--red); }
+  .pnl-pos { color: var(--green); font-family: var(--mono); font-weight: 500; }
+  .pnl-neg { color: var(--red); font-family: var(--mono); font-weight: 500; }
+
+  /* ===== FORMS ===== */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  input, select, textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: var(--font);
+    outline: none;
+    transition: border 0.15s;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+  }
+  textarea { min-height: 90px; resize: vertical; }
+  select { cursor: pointer; }
+
+  /* ===== MODAL ===== */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 720px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow);
+  }
+  .modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--bg-elevated);
+    z-index: 1;
+  }
+  .modal-title { font-size: 17px; font-weight: 600; }
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 22px;
+    line-height: 1;
+    padding: 4px;
+  }
+  .modal-body { padding: 24px; }
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  /* ===== AI CHAT ===== */
+  .chat-bubble {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    box-shadow: 0 8px 28px rgba(59,130,246,0.4);
+    z-index: 100;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: none;
+  }
+  .chat-bubble:hover {
+    transform: scale(1.06);
+    box-shadow: 0 10px 32px rgba(59,130,246,0.55);
+  }
+  .chat-bubble svg { width: 26px; height: 26px; color: white; }
+
+  .chat-panel {
+    position: fixed;
+    bottom: 100px;
+    right: 28px;
+    width: 400px;
+    max-height: 560px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    z-index: 100;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .chat-panel.open { display: flex; }
+  .chat-header {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-card);
+  }
+  .chat-header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .chat-status {
+    width: 8px; height: 8px;
+    background: var(--green);
+    border-radius: 50%;
+  }
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 320px;
+    max-height: 380px;
+  }
+  .msg {
+    max-width: 88%;
+    padding: 11px 14px;
+    border-radius: 12px;
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+  .msg-ai {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+  }
+  .msg-user {
+    background: var(--accent);
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+  }
+  .msg-ai strong { color: var(--accent); }
+  .msg-ai .katex { font-size: 1.05em; color: var(--text); }
+  .msg-ai .katex-display { margin: 12px 0; overflow-x: auto; }
+  .ai-table-wrap { overflow-x: auto; margin: 10px 0; border-radius: 8px; border: 1px solid var(--border); }
+  .ai-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .ai-table th {
+    background: var(--bg);
+    color: var(--text-muted);
+    font-weight: 600;
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .ai-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  .ai-table tr:last-child td { border-bottom: none; }
+  .ai-list { padding-left: 18px; margin: 8px 0; }
+  .ai-list li { margin-bottom: 4px; }
+  .ai-code {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-family: var(--mono);
+    font-size: 0.9em;
+  }
+  .ai-h2 { font-weight: 600; font-size: 14.5px; margin: 12px 0 6px; color: var(--accent); }
+  .ai-h3 { font-weight: 600; font-size: 13.5px; margin: 10px 0 4px; color: var(--text); }
+  .chat-input-area {
+    padding: 12px 14px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+  }
+  .chat-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-size: 13.5px;
+    outline: none;
+    font-family: var(--font);
+  }
+  .chat-input:focus { border-color: var(--accent); }
+  .chat-send {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: var(--accent);
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+  }
+  .chat-send:hover { background: #2563eb; }
+
+  /* ===== REVIEW PANEL ===== */
+  .review-content {
+    font-size: 14px;
+    line-height: 1.65;
+  }
+  .review-content h3 {
+    font-size: 15px;
+    margin: 22px 0 10px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .review-content h3:first-child { margin-top: 0; }
+  .review-content ul { padding-left: 18px; margin: 8px 0; }
+  .review-content li { margin-bottom: 5px; }
+  .score-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 12px 0;
+  }
+  .score-pill {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+  .score-pill span { font-weight: 600; font-family: var(--mono); }
+  .grade {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    font-size: 20px;
+    font-weight: 700;
+    margin: 8px 0;
+  }
+  .grade-A { background: var(--green-soft); color: var(--green); }
+  .grade-B { background: rgba(59,130,246,0.15); color: var(--accent); }
+  .grade-C { background: rgba(245,158,11,0.15); color: var(--amber); }
+  .grade-D, .grade-F { background: var(--red-soft); color: var(--red); }
+
+  /* ===== EMPTY STATE ===== */
+  .empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-muted);
+  }
+  .empty svg { width: 48px; height: 48px; opacity: 0.4; margin-bottom: 12px; }
+  .empty p { font-size: 14px; }
+
+  /* ===== SECTIONS ===== */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .form-grid, .two-col { grid-template-columns: 1fr; }
+    .chat-panel { width: calc(100vw - 32px); right: 16px; }
+  }
+
+  .typing {
+    display: flex;
+    gap: 4px;
+    padding: 8px 0;
+  }
+  .typing span {
+    width: 7px; height: 7px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.15s; }
+  .typing span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-5px); opacity: 1; }
+  }
+
+  .insight-list { list-style: none; padding: 0; }
+  .insight-list li {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13.5px;
+    display: flex;
+    gap: 10px;
+  }
+  .insight-list li:last-child { border-bottom: none; }
+  .insight-icon { color: var(--accent); flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">Æ</div>
+      <div>
+        <div class="logo-text">Aether Journal</div>
+        <div class="logo-sub">AI Trading Coach</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <button class="nav-item active" data-section="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item" data-section="journal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Trade Journal
+      </button>
+      <button class="nav-item" data-section="analytics">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+        Analytics
+      </button>
+      <button class="nav-item" data-section="insights">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        AI Insights
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      Discipline → Consistency → Edge
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <h1 class="page-title" id="pageTitle">Dashboard</h1>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost btn-sm" onclick="exportJournal()">Export CSV</button>
+        <button class="btn btn-primary" onclick="openAddTrade()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Log Trade
+        </button>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- DASHBOARD -->
+      <section class="section active" id="dashboard">
+        <div class="stats-grid" id="statsGrid">
+          <!-- populated by JS -->
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Recent Trades</span>
+            <button class="btn btn-ghost btn-sm" onclick="switchSection('journal')">View All</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Symbol</th>
+                  <th>Side</th>
+                  <th>P&L</th>
+                  <th>RR</th>
+                  <th>Result</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="recentTradesBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- JOURNAL -->
+      <section class="section" id="journal">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">All Trades</span>
+            <span style="font-size:13px;color:var(--text-muted)" id="tradeCount">0 trades</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Symbol</th>
+                  <th>Side</th>
+                  <th>Entry</th>
+                  <th>Exit</th>
+                  <th>Qty</th>
+                  <th>P&L</th>
+                  <th>RR</th>
+                  <th>Strategy</th>
+                  <th>Emotion</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="journalBody"></tbody>
+            </table>
+          </div>
+          <div class="empty" id="journalEmpty" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <p>No trades logged yet. Click “Log Trade” to begin your journal.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ANALYTICS -->
+      <section class="section" id="analytics">
+        <div class="stats-grid" id="analyticsStats"></div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header"><span class="card-title">By Strategy</span></div>
+            <div class="card-body" id="strategyBreakdown"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">By Session</span></div>
+            <div class="card-body" id="sessionBreakdown"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- INSIGHTS -->
+      <section class="section" id="insights">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Pattern Detection & Behavioral Insights</span></div>
+          <div class="card-body">
+            <ul class="insight-list" id="insightsList">
+              <li><span class="insight-icon">→</span> Log at least 5–10 trades to unlock AI pattern detection, best/worst setups, and behavioral analysis.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- ADD / EDIT TRADE MODAL -->
+<div class="modal-overlay" id="tradeModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">Log New Trade</span>
+      <button class="modal-close" onclick="closeTradeModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="tradeForm">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Symbol</label>
+            <input type="text" id="fSymbol" placeholder="e.g. AAPL, EURUSD, BTCUSD" required>
+          </div>
+          <div class="form-group">
+            <label>Direction</label>
+            <select id="fSide" required>
+              <option value="Long">Long</option>
+              <option value="Short">Short</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="fDate" required>
+          </div>
+          <div class="form-group">
+            <label>Session</label>
+            <select id="fSession">
+              <option>London</option>
+              <option>New York</option>
+              <option>Asia</option>
+              <option>Overlap</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Entry Price</label>
+            <input type="number" id="fEntry" step="any" required>
+          </div>
+          <div class="form-group">
+            <label>Exit Price</label>
+            <input type="number" id="fExit" step="any" required>
+          </div>
+          <div class="form-group">
+            <label>Stop Loss</label>
+            <input type="number" id="fSL" step="any">
+          </div>
+          <div class="form-group">
+            <label>Target</label>
+            <input type="number" id="fTarget" step="any">
+          </div>
+          <div class="form-group">
+            <label>Quantity / Size</label>
+            <input type="number" id="fQty" step="any" required>
+          </div>
+          <div class="form-group">
+            <label>Risk % of Account</label>
+            <input type="number" id="fRisk" step="0.1" placeholder="e.g. 1.0">
+          </div>
+          <div class="form-group">
+            <label>Account Size (optional)</label>
+            <input type="number" id="fAccount" step="any" placeholder="e.g. 10000">
+          </div>
+          <div class="form-group">
+            <label>Strategy</label>
+            <input type="text" id="fStrategy" placeholder="e.g. Breakout, Pullback, ORB">
+          </div>
+          <div class="form-group">
+            <label>Emotion / State</label>
+            <select id="fEmotion">
+              <option>Calm</option>
+              <option>Confident</option>
+              <option>Fearful</option>
+              <option>FOMO</option>
+              <option>Revenge</option>
+              <option>Hesitant</option>
+              <option>Overconfident</option>
+              <option>Bored</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>Trade Notes</label>
+            <textarea id="fNotes" placeholder="Setup description, reasons for entry/exit, observations..."></textarea>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeTradeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTrade()">Save Trade</button>
+    </div>
+  </div>
+</div>
+
+<!-- TRADE REVIEW MODAL -->
+<div class="modal-overlay" id="reviewModal">
+  <div class="modal" style="max-width:820px">
+    <div class="modal-header">
+      <span class="modal-title">Professional Trade Review</span>
+      <button class="modal-close" onclick="closeReviewModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="review-content" id="reviewContent">
+        <!-- AI review injected here -->
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeReviewModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI CHAT -->
+<button class="chat-bubble" id="chatBubble" title="AI Assistant">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+</button>
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-header">
+    <div class="chat-header-title">
+      <div class="chat-status"></div>
+      Aether AI Assistant
+    </div>
+    <button class="modal-close" style="font-size:18px" onclick="toggleChat()">&times;</button>
+  </div>
+  <div class="chat-messages" id="chatMessages">
+    <div class="msg msg-ai">
+      Hello. I’m your trading journal AI coach. I can explain concepts, help with psychology, risk management, and review your completed trades objectively.<br><br>
+      Ask me anything about trading, or select a trade and press <strong>Review Trade</strong> for a full professional analysis.
+    </div>
+  </div>
+  <div class="chat-input-area">
+    <input class="chat-input" id="chatInput" placeholder="Ask about trading, risk, psychology..." onkeydown="if(event.key==='Enter')sendChat()">
+    <button class="chat-send" onclick="sendChat()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   AETHER JOURNAL — Single-file Trading Journal + AI Coach
+   ============================================================ */
+
+const STORAGE_KEY = 'aether_trades_v1';
+
+/* ============================================================
+   API KEYS — Paste your keys below
+   ============================================================ */
+const ALPHA_VANTAGE_KEY = "YOUR_ALPHAVANTAGE_API_KEY_HERE";   // https://www.alphavantage.co/support/#api-key
+const FINNHUB_KEY       = "YOUR_FINNHUB_API_KEY_HERE";        // https://finnhub.io/register
+const MARKETAUX_KEY     = "YOUR_MARKETAUX_API_KEY_HERE";      // https://www.marketaux.com/
+const OPENROUTER_KEY    = "YOUR_OPENROUTER_API_KEY_HERE";     // https://openrouter.ai/keys
+
+let trades = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+let editingId = null;
+
+/* ---------- UTIL ---------- */
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function fmt(n, d=2) { return Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(trades)); renderAll(); }
+
+function calcPnL(t) {
+  const dir = t.side === 'Long' ? 1 : -1;
+  return (t.exit - t.entry) * t.qty * dir;
+}
+function calcRR(t) {
+  if (!t.sl || t.sl === t.entry) return null;
+  const risk = Math.abs(t.entry - t.sl);
+  const reward = Math.abs(t.exit - t.entry);
+  return risk > 0 ? +(reward / risk).toFixed(2) : null;
+}
+
+/* ---------- MARKET DATA APIs ---------- */
+async function fetchFinnhubQuote(symbol) {
+  if (!FINNHUB_KEY || FINNHUB_KEY.includes("YOUR_")) return null;
+  try {
+    const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${FINNHUB_KEY}`);
+    if (!res.ok) return null;
+    const d = await res.json();
+    if (d.c == null || d.c === 0) return null;
+    return {
+      symbol,
+      price: d.c,
+      change: d.d,
+      changePct: d.dp,
+      high: d.h,
+      low: d.l,
+      open: d.o,
+      prevClose: d.pc,
+      source: "Finnhub"
+    };
+  } catch (e) { console.warn("Finnhub quote error", e); return null; }
+}
+
+async function fetchFinnhubProfile(symbol) {
+  if (!FINNHUB_KEY || FINNHUB_KEY.includes("YOUR_")) return null;
+  try {
+    const res = await fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${encodeURIComponent(symbol)}&token=${FINNHUB_KEY}`);
+    if (!res.ok) return null;
+    const d = await res.json();
+    if (!d.name) return null;
+    return { name: d.name, exchange: d.exchange, industry: d.finnhubIndustry, marketCap: d.marketCapitalization, country: d.country };
+  } catch (e) { return null; }
+}
+
+async function fetchAlphaVantageDaily(symbol) {
+  if (!ALPHA_VANTAGE_KEY || ALPHA_VANTAGE_KEY.includes("YOUR_")) return null;
+  try {
+    const res = await fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${encodeURIComponent(symbol)}&apikey=${ALPHA_VANTAGE_KEY}`);
+    if (!res.ok) return null;
+    const d = await res.json();
+    const series = d["Time Series (Daily)"];
+    if (!series) return null;
+    const dates = Object.keys(series).sort().reverse().slice(0, 5);
+    return dates.map(dt => ({
+      date: dt,
+      open: +series[dt]["1. open"],
+      high: +series[dt]["2. high"],
+      low: +series[dt]["3. low"],
+      close: +series[dt]["4. close"],
+      volume: +series[dt]["5. volume"]
+    }));
+  } catch (e) { console.warn("AV error", e); return null; }
+}
+
+async function fetchMarketAuxNews(symbol) {
+  if (!MARKETAUX_KEY || MARKETAUX_KEY.includes("YOUR_")) return null;
+  try {
+    const res = await fetch(`https://api.marketaux.com/v1/news/all?symbols=${encodeURIComponent(symbol)}&filter_entities=true&language=en&limit=5&api_token=${MARKETAUX_KEY}`);
+    if (!res.ok) return null;
+    const d = await res.json();
+    if (!d.data || !d.data.length) return null;
+    return d.data.map(n => ({
+      title: n.title,
+      description: (n.description || "").slice(0, 180),
+      source: n.source,
+      published: n.published_at,
+      sentiment: n.entities?.[0]?.sentiment_score
+    }));
+  } catch (e) { console.warn("MarketAux error", e); return null; }
+}
+
+/** Build a text summary of the entire journal for the AI */
+function buildJournalContext() {
+  if (!trades.length) {
+    return "USER JOURNAL: No trades logged yet.";
+  }
+
+  const pnls = trades.map(calcPnL);
+  const wins = pnls.filter(p => p > 0).length;
+  const losses = pnls.filter(p => p < 0).length;
+  const net = pnls.reduce((a, b) => a + b, 0);
+  const winRate = ((wins / trades.length) * 100).toFixed(1);
+
+  // Sort by date then original order
+  const sorted = [...trades].sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+
+  // Group by day for "Nth trade of the day"
+  const byDay = {};
+  sorted.forEach(t => {
+    if (!byDay[t.date]) byDay[t.date] = [];
+    byDay[t.date].push(t);
+  });
+
+  let tradeLines = "";
+  sorted.forEach((t, i) => {
+    const dayTrades = byDay[t.date] || [];
+    const dayIndex = dayTrades.findIndex(x => x.id === t.id) + 1;
+    const pnl = calcPnL(t);
+    const rr = calcRR(t);
+    tradeLines += `
+TRADE #${i + 1} (Trade #${dayIndex} of ${t.date}):
+  Symbol: ${t.symbol} | Side: ${t.side} | Date: ${t.date} | Session: ${t.session || "—"}
+  Entry: ${t.entry} | Exit: ${t.exit} | SL: ${t.sl ?? "—"} | Target: ${t.target ?? "—"}
+  Qty: ${t.qty} | Risk%: ${t.risk ?? "—"} | Strategy: ${t.strategy || "—"} | Emotion: ${t.emotion || "—"}
+  P&L: ${pnl >= 0 ? "+" : ""}${pnl.toFixed(2)} | RR: ${rr ?? "—"}
+  Notes: ${t.notes || "(none)"}
+`;
+  });
+
+  return `USER TRADING JOURNAL SUMMARY
+Total trades: ${trades.length}
+Wins: ${wins} | Losses: ${losses} | Win rate: ${winRate}%
+Net P&L: ${net >= 0 ? "+" : ""}${net.toFixed(2)}
+
+DETAILED TRADES (oldest → newest):
+${tradeLines}
+
+You have FULL access to this journal. When the user asks about "my 2nd trade today", "mistakes in trade 3", "my losing trades", etc., use the data above. Be specific and reference actual numbers, emotions, strategies and notes from their journal.`;
+}
+
+/** Detect symbols mentioned in user message and fetch market data */
+async function fetchMarketContextForMessage(text) {
+  const symbols = new Set();
+  // From journal
+  trades.forEach(t => { if (t.symbol) symbols.add(t.symbol.toUpperCase()); });
+  // From message (simple ticker-like tokens)
+  const matches = text.toUpperCase().match(/\b[A-Z]{1,5}\b/g) || [];
+  matches.forEach(m => {
+    if (m.length >= 1 && m.length <= 5 && !["I","A","THE","AND","FOR","MY","IN","ON","TO","OF","IS","IT","OR","AT"].includes(m)) {
+      symbols.add(m);
+    }
+  });
+
+  // Limit to avoid rate limits
+  const list = [...symbols].slice(0, 3);
+  if (!list.length) return "";
+
+  let ctx = "\n\nLIVE MARKET DATA (fetched just now):\n";
+  for (const sym of list) {
+    const quote = await fetchFinnhubQuote(sym);
+    const news = await fetchMarketAuxNews(sym);
+    if (quote) {
+      ctx += `${sym}: Price ${quote.price} | Change ${quote.change} (${quote.changePct}%) | Day High ${quote.high} Low ${quote.low} | Source: ${quote.source}\n`;
+    }
+    if (news && news.length) {
+      ctx += `${sym} recent news:\n`;
+      news.slice(0, 3).forEach(n => {
+        ctx += `  - ${n.title} (${n.source}${n.sentiment != null ? ", sentiment " + n.sentiment.toFixed(2) : ""})\n`;
+      });
+    }
+  }
+  return ctx;
+}
+
+/* ---------- NAV ---------- */
+document.querySelectorAll('.nav-item').forEach(btn => {
+  btn.addEventListener('click', () => switchSection(btn.dataset.section));
+});
+function switchSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelector(`[data-section="${id}"]`).classList.add('active');
+  const titles = { dashboard:'Dashboard', journal:'Trade Journal', analytics:'Analytics', insights:'AI Insights' };
+  document.getElementById('pageTitle').textContent = titles[id] || id;
+  if (id === 'analytics') renderAnalytics();
+  if (id === 'insights') renderInsights();
+}
+
+/* ---------- RENDER ---------- */
+function renderAll() {
+  renderStats();
+  renderRecent();
+  renderJournal();
+  renderAnalytics();
+  renderInsights();
+}
+
+function renderStats() {
+  const el = document.getElementById('statsGrid');
+  if (!trades.length) {
+    el.innerHTML = `
+      <div class="stat-card"><div class="stat-label">Total Trades</div><div class="stat-value">0</div></div>
+      <div class="stat-card"><div class="stat-label">Win Rate</div><div class="stat-value">—</div></div>
+      <div class="stat-card"><div class="stat-label">Net P&L</div><div class="stat-value">—</div></div>
+      <div class="stat-card"><div class="stat-label">Avg RR</div><div class="stat-value">—</div></div>
+      <div class="stat-card"><div class="stat-label">Profit Factor</div><div class="stat-value">—</div></div>
+      <div class="stat-card"><div class="stat-label">Expectancy</div><div class="stat-value">—</div></div>`;
+    return;
+  }
+  const pnls = trades.map(calcPnL);
+  const wins = pnls.filter(p => p > 0);
+  const losses = pnls.filter(p => p < 0);
+  const net = pnls.reduce((a,b)=>a+b,0);
+  const winRate = (wins.length / trades.length * 100).toFixed(1);
+  const rrs = trades.map(calcRR).filter(r => r !== null);
+  const avgRR = rrs.length ? (rrs.reduce((a,b)=>a+b,0)/rrs.length).toFixed(2) : '—';
+  const grossWin = wins.reduce((a,b)=>a+b,0);
+  const grossLoss = Math.abs(losses.reduce((a,b)=>a+b,0));
+  const pf = grossLoss > 0 ? (grossWin/grossLoss).toFixed(2) : '∞';
+  const expectancy = (net / trades.length).toFixed(2);
+
+  el.innerHTML = `
+    <div class="stat-card"><div class="stat-label">Total Trades</div><div class="stat-value">${trades.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Win Rate</div><div class="stat-value ${winRate>=50?'positive':''}">${winRate}%</div><div class="stat-sub">${wins.length}W / ${losses.length}L</div></div>
+    <div class="stat-card"><div class="stat-label">Net P&L</div><div class="stat-value ${net>=0?'positive':'negative'}">${net>=0?'+':''}${fmt(net)}</div></div>
+    <div class="stat-card"><div class="stat-label">Avg RR</div><div class="stat-value">${avgRR}</div></div>
+    <div class="stat-card"><div class="stat-label">Profit Factor</div><div class="stat-value">${pf}</div></div>
+    <div class="stat-card"><div class="stat-label">Expectancy</div><div class="stat-value ${expectancy>=0?'positive':'negative'}">${expectancy}</div></div>`;
+}
+
+function renderRecent() {
+  const body = document.getElementById('recentTradesBody');
+  const recent = [...trades].reverse().slice(0,6);
+  if (!recent.length) {
+    body.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:32px">No trades yet</td></tr>`;
+    return;
+  }
+  body.innerHTML = recent.map(t => {
+    const pnl = calcPnL(t);
+    const rr = calcRR(t);
+    return `<tr>
+      <td>${t.date}</td>
+      <td style="font-weight:600">${t.symbol}</td>
+      <td><span class="badge ${t.side==='Long'?'badge-long':'badge-short'}">${t.side}</span></td>
+      <td class="${pnl>=0?'pnl-pos':'pnl-neg'}">${pnl>=0?'+':''}${fmt(pnl)}</td>
+      <td style="font-family:var(--mono)">${rr ?? '—'}</td>
+      <td><span class="badge ${pnl>=0?'badge-win':'badge-loss'}">${pnl>=0?'Win':'Loss'}</span></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="reviewTrade('${t.id}')">Review</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderJournal() {
+  const body = document.getElementById('journalBody');
+  const empty = document.getElementById('journalEmpty');
+  document.getElementById('tradeCount').textContent = `${trades.length} trade${trades.length!==1?'s':''}`;
+  if (!trades.length) {
+    body.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  body.innerHTML = [...trades].reverse().map(t => {
+    const pnl = calcPnL(t);
+    const rr = calcRR(t);
+    return `<tr>
+      <td>${t.date}</td>
+      <td style="font-weight:600">${t.symbol}</td>
+      <td><span class="badge ${t.side==='Long'?'badge-long':'badge-short'}">${t.side}</span></td>
+      <td style="font-family:var(--mono)">${fmt(t.entry,4)}</td>
+      <td style="font-family:var(--mono)">${fmt(t.exit,4)}</td>
+      <td>${t.qty}</td>
+      <td class="${pnl>=0?'pnl-pos':'pnl-neg'}">${pnl>=0?'+':''}${fmt(pnl)}</td>
+      <td style="font-family:var(--mono)">${rr ?? '—'}</td>
+      <td>${t.strategy || '—'}</td>
+      <td>${t.emotion || '—'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-ghost btn-sm" onclick="reviewTrade('${t.id}')">Review</button>
+        <button class="btn btn-ghost btn-sm" onclick="editTrade('${t.id}')">Edit</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteTrade('${t.id}')">Del</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderAnalytics() {
+  const el = document.getElementById('analyticsStats');
+  if (!trades.length) {
+    el.innerHTML = '<p style="color:var(--text-muted)">Log trades to see analytics.</p>';
+    document.getElementById('strategyBreakdown').innerHTML = '';
+    document.getElementById('sessionBreakdown').innerHTML = '';
+    return;
+  }
+  const pnls = trades.map(calcPnL);
+  const avgWin = pnls.filter(p=>p>0).reduce((a,b)=>a+b,0) / (pnls.filter(p=>p>0).length || 1);
+  const avgLoss = pnls.filter(p=>p<0).reduce((a,b)=>a+b,0) / (pnls.filter(p=>p<0).length || 1);
+  let maxDD = 0, peak = 0, equity = 0;
+  pnls.forEach(p => { equity += p; if (equity > peak) peak = equity; const dd = peak - equity; if (dd > maxDD) maxDD = dd; });
+  let wStreak=0, lStreak=0, maxW=0, maxL=0;
+  pnls.forEach(p => {
+    if (p>0) { wStreak++; lStreak=0; maxW=Math.max(maxW,wStreak); }
+    else if (p<0) { lStreak++; wStreak=0; maxL=Math.max(maxL,lStreak); }
+  });
+
+  el.innerHTML = `
+    <div class="stat-card"><div class="stat-label">Avg Win</div><div class="stat-value positive">${fmt(avgWin)}</div></div>
+    <div class="stat-card"><div class="stat-label">Avg Loss</div><div class="stat-value negative">${fmt(avgLoss)}</div></div>
+    <div class="stat-card"><div class="stat-label">Max Drawdown</div><div class="stat-value negative">${fmt(maxDD)}</div></div>
+    <div class="stat-card"><div class="stat-label">Longest Win Streak</div><div class="stat-value">${maxW}</div></div>
+    <div class="stat-card"><div class="stat-label">Longest Loss Streak</div><div class="stat-value">${maxL}</div></div>`;
+
+  // Strategy breakdown
+  const byStrat = {};
+  trades.forEach(t => {
+    const s = t.strategy || 'Unspecified';
+    if (!byStrat[s]) byStrat[s] = {n:0, wins:0, pnl:0};
+    byStrat[s].n++;
+    const p = calcPnL(t);
+    byStrat[s].pnl += p;
+    if (p>0) byStrat[s].wins++;
+  });
+  document.getElementById('strategyBreakdown').innerHTML = Object.entries(byStrat).map(([k,v]) =>
+    `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13.5px">
+      <span>${k} <span style="color:var(--text-dim)">(${v.n})</span></span>
+      <span><span style="color:var(--text-muted)">${(v.wins/v.n*100).toFixed(0)}% WR</span> &nbsp; <span class="${v.pnl>=0?'pnl-pos':'pnl-neg'}">${v.pnl>=0?'+':''}${fmt(v.pnl)}</span></span>
+    </div>`).join('') || '<p style="color:var(--text-muted)">No strategy data</p>';
+
+  // Session
+  const bySess = {};
+  trades.forEach(t => {
+    const s = t.session || 'Other';
+    if (!bySess[s]) bySess[s] = {n:0, wins:0, pnl:0};
+    bySess[s].n++;
+    const p = calcPnL(t);
+    bySess[s].pnl += p;
+    if (p>0) bySess[s].wins++;
+  });
+  document.getElementById('sessionBreakdown').innerHTML = Object.entries(bySess).map(([k,v]) =>
+    `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13.5px">
+      <span>${k} <span style="color:var(--text-dim)">(${v.n})</span></span>
+      <span><span style="color:var(--text-muted)">${(v.wins/v.n*100).toFixed(0)}% WR</span> &nbsp; <span class="${v.pnl>=0?'pnl-pos':'pnl-neg'}">${v.pnl>=0?'+':''}${fmt(v.pnl)}</span></span>
+    </div>`).join('') || '<p style="color:var(--text-muted)">No session data</p>';
+}
+
+function renderInsights() {
+  const list = document.getElementById('insightsList');
+  if (trades.length < 5) {
+    list.innerHTML = `<li><span class="insight-icon">→</span> Log at least 5–10 trades to unlock AI pattern detection, best/worst setups, and behavioral analysis.</li>`;
+    return;
+  }
+  const insights = [];
+  // Emotion analysis
+  const byEmo = {};
+  trades.forEach(t => {
+    const e = t.emotion || 'Unknown';
+    if (!byEmo[e]) byEmo[e] = {n:0, wins:0};
+    byEmo[e].n++;
+    if (calcPnL(t)>0) byEmo[e].wins++;
+  });
+  const worstEmo = Object.entries(byEmo).filter(([,v])=>v.n>=2).sort((a,b)=> (a[1].wins/a[1].n) - (b[1].wins/b[1].n))[0];
+  if (worstEmo) insights.push(`Trades marked “${worstEmo[0]}” have a ${(worstEmo[1].wins/worstEmo[1].n*100).toFixed(0)}% win rate across ${worstEmo[1].n} trades — consider filtering this emotional state.`);
+
+  // Strategy
+  const byStrat = {};
+  trades.forEach(t => {
+    const s = t.strategy || 'Unspecified';
+    if (!byStrat[s]) byStrat[s] = {n:0, wins:0, pnl:0};
+    byStrat[s].n++;
+    const p = calcPnL(t);
+    byStrat[s].pnl += p;
+    if (p>0) byStrat[s].wins++;
+  });
+  const bestStrat = Object.entries(byStrat).filter(([,v])=>v.n>=2).sort((a,b)=> b[1].pnl - a[1].pnl)[0];
+  if (bestStrat) insights.push(`Highest P&L strategy so far: “${bestStrat[0]}” (${bestStrat[1].n} trades, ${(bestStrat[1].wins/bestStrat[1].n*100).toFixed(0)}% WR).`);
+
+  // Risk
+  const highRisk = trades.filter(t => t.risk && t.risk > 2);
+  if (highRisk.length) insights.push(`${highRisk.length} trade(s) risked >2% of account. Consistent oversizing is a common path to large drawdowns.`);
+
+  // RR
+  const lowRR = trades.filter(t => { const r=calcRR(t); return r!==null && r < 1; });
+  if (lowRR.length >= 3) insights.push(`${lowRR.length} trades closed with RR < 1. Even a high win-rate system can struggle if average reward stays below average risk.`);
+
+  // Streaks
+  const pnls = trades.map(calcPnL);
+  let lStreak=0, maxL=0;
+  pnls.forEach(p => { if(p<0){lStreak++;maxL=Math.max(maxL,lStreak);} else lStreak=0; });
+  if (maxL >= 4) insights.push(`Longest losing streak: ${maxL}. Review whether those trades shared the same setup, session, or emotional state.`);
+
+  if (!insights.length) insights.push('No strong negative patterns detected yet. Continue journaling consistently — quality of process matters more than any single result.');
+
+  list.innerHTML = insights.map(i => `<li><span class="insight-icon">→</span> ${i}</li>`).join('');
+}
+
+/* ---------- TRADE CRUD ---------- */
+function openAddTrade() {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'Log New Trade';
+  document.getElementById('tradeForm').reset();
+  document.getElementById('fDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('tradeModal').classList.add('open');
+}
+function closeTradeModal() { document.getElementById('tradeModal').classList.remove('open'); }
+
+function saveTrade() {
+  const t = {
+    id: editingId || uid(),
+    symbol: document.getElementById('fSymbol').value.trim().toUpperCase(),
+    side: document.getElementById('fSide').value,
+    date: document.getElementById('fDate').value,
+    session: document.getElementById('fSession').value,
+    entry: +document.getElementById('fEntry').value,
+    exit: +document.getElementById('fExit').value,
+    sl: document.getElementById('fSL').value ? +document.getElementById('fSL').value : null,
+    target: document.getElementById('fTarget').value ? +document.getElementById('fTarget').value : null,
+    qty: +document.getElementById('fQty').value,
+    risk: document.getElementById('fRisk').value ? +document.getElementById('fRisk').value : null,
+    account: document.getElementById('fAccount').value ? +document.getElementById('fAccount').value : null,
+    strategy: document.getElementById('fStrategy').value.trim(),
+    emotion: document.getElementById('fEmotion').value,
+    notes: document.getElementById('fNotes').value.trim()
+  };
+  if (!t.symbol || !t.entry || !t.exit || !t.qty) { alert('Please fill required fields.'); return; }
+  if (editingId) {
+    const idx = trades.findIndex(x => x.id === editingId);
+    if (idx >= 0) trades[idx] = t;
+  } else {
+    trades.push(t);
+  }
+  save();
+  closeTradeModal();
+}
+
+function editTrade(id) {
+  const t = trades.find(x => x.id === id);
+  if (!t) return;
+  editingId = id;
+  document.getElementById('modalTitle').textContent = 'Edit Trade';
+  document.getElementById('fSymbol').value = t.symbol;
+  document.getElementById('fSide').value = t.side;
+  document.getElementById('fDate').value = t.date;
+  document.getElementById('fSession').value = t.session || 'London';
+  document.getElementById('fEntry').value = t.entry;
+  document.getElementById('fExit').value = t.exit;
+  document.getElementById('fSL').value = t.sl ?? '';
+  document.getElementById('fTarget').value = t.target ?? '';
+  document.getElementById('fQty').value = t.qty;
+  document.getElementById('fRisk').value = t.risk ?? '';
+  document.getElementById('fAccount').value = t.account ?? '';
+  document.getElementById('fStrategy').value = t.strategy || '';
+  document.getElementById('fEmotion').value = t.emotion || 'Calm';
+  document.getElementById('fNotes').value = t.notes || '';
+  document.getElementById('tradeModal').classList.add('open');
+}
+
+function deleteTrade(id) {
+  if (!confirm('Delete this trade?')) return;
+  trades = trades.filter(t => t.id !== id);
+  save();
+}
+
+function exportJournal() {
+  if (!trades.length) { alert('No trades to export.'); return; }
+  const headers = ['Date','Symbol','Side','Entry','Exit','SL','Target','Qty','Risk%','Strategy','Emotion','Notes','PnL','RR'];
+  const rows = trades.map(t => {
+    const pnl = calcPnL(t);
+    const rr = calcRR(t);
+    return [t.date,t.symbol,t.side,t.entry,t.exit,t.sl??'',t.target??'',t.qty,t.risk??'',t.strategy,t.emotion,`"${(t.notes||'').replace(/"/g,'""')}"`,pnl,rr??''].join(',');
+  });
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `aether_journal_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+/* ---------- PROFESSIONAL TRADE REVIEW (Mode 2) ---------- */
+async function reviewTrade(id) {
+  const t = trades.find(x => x.id === id);
+  if (!t) return;
+
+  // Show modal immediately with loading state for market section
+  document.getElementById('reviewContent').innerHTML = `<p style="color:var(--text-muted)">Loading review & market data for <strong>${t.symbol}</strong>…</p>`;
+  document.getElementById('reviewModal').classList.add('open');
+
+  const pnl = calcPnL(t);
+  const rr = calcRR(t);
+  const isWin = pnl > 0;
+
+  // Scores (heuristic, process-focused)
+  let execScore = 7;
+  let riskScore = 7;
+  let psychScore = 7;
+
+  if (t.sl == null) { riskScore -= 3; }
+  if (t.risk && t.risk > 2) riskScore -= 2;
+  if (t.risk && t.risk <= 1) riskScore += 1;
+  if (rr !== null && rr < 1) riskScore -= 1.5;
+  if (rr !== null && rr >= 2) riskScore += 1;
+
+  const badEmotions = ['FOMO','Revenge','Overconfident','Fearful'];
+  if (badEmotions.includes(t.emotion)) psychScore -= 2.5;
+  if (t.emotion === 'Calm' || t.emotion === 'Confident') psychScore += 1;
+  if (!t.notes || t.notes.length < 10) execScore -= 1;
+
+  execScore = Math.max(1, Math.min(10, Math.round(execScore*10)/10));
+  riskScore = Math.max(1, Math.min(10, Math.round(riskScore*10)/10));
+  psychScore = Math.max(1, Math.min(10, Math.round(psychScore*10)/10));
+  const overall = Math.round(((execScore + riskScore + psychScore)/3)*10)/10;
+
+  let grade = 'C';
+  if (overall >= 8.5) grade = 'A+';
+  else if (overall >= 7.5) grade = 'A';
+  else if (overall >= 6.5) grade = 'B';
+  else if (overall >= 5) grade = 'C';
+  else if (overall >= 3.5) grade = 'D';
+  else grade = 'F';
+
+  const mistakes = [];
+  const positives = [];
+
+  if (!t.sl) mistakes.push('No stop-loss recorded — unprotected capital is the fastest way to large drawdowns.');
+  if (t.risk && t.risk > 2) mistakes.push(`Risked ${t.risk}% of account. Professional risk is typically ≤1–1.5% per trade.`);
+  if (rr !== null && rr < 1) mistakes.push(`Realized RR of ${rr} is below 1:1. Over time this requires an unusually high win rate to be profitable.`);
+  if (badEmotions.includes(t.emotion)) mistakes.push(`Emotional state “${t.emotion}” often correlates with lower-quality decisions. Process first, emotion second.`);
+  if (!t.strategy) mistakes.push('No strategy tag — without classification it is hard to measure which setups actually have edge.');
+  if (!t.notes) mistakes.push('Missing trade notes. Journaling the reasoning is what turns experience into improvement.');
+
+  if (t.sl) positives.push('Stop-loss was defined — good capital protection habit.');
+  if (t.risk && t.risk <= 1.5) positives.push(`Risk kept at ${t.risk}% — within disciplined range.`);
+  if (rr !== null && rr >= 1.5) positives.push(`Achieved RR of ${rr} — favorable reward relative to risk.`);
+  if (t.emotion === 'Calm') positives.push('Emotional state logged as Calm — ideal baseline for decision quality.');
+  if (t.notes && t.notes.length > 20) positives.push('Detailed notes provided — this supports later pattern review.');
+  if (t.strategy) positives.push(`Strategy tagged (“${t.strategy}”) — enables performance segmentation.`);
+
+  if (!mistakes.length) mistakes.push('No major process red flags identified on this trade.');
+  if (!positives.length) positives.push('Trade recorded — the act of journaling itself is a positive discipline.');
+
+  const improvements = [];
+  if (!t.sl) improvements.push('Always pre-define and record stop-loss before entry.');
+  if (t.risk > 1.5) improvements.push('Reduce position size so risk stays ≤1% of account on most trades.');
+  if (rr < 1.5) improvements.push('Aim for setups where planned RR is at least 1.5–2 before entry.');
+  if (badEmotions.includes(t.emotion)) improvements.push('Add a pre-trade checklist and skip the session if emotion is elevated.');
+  if (!t.notes) improvements.push('Write 2–3 sentences on why you entered and why you exited for every trade.');
+  while (improvements.length < 3) improvements.push('Continue consistent journaling and review weekly statistics.');
+
+  // Fetch live market data for this symbol
+  let marketHtml = `<p style="color:var(--text-muted)">No live data available. Add Finnhub / MarketAux / AlphaVantage keys to enable quotes and news.</p>`;
+  try {
+    const [quote, news, daily] = await Promise.all([
+      fetchFinnhubQuote(t.symbol),
+      fetchMarketAuxNews(t.symbol),
+      fetchAlphaVantageDaily(t.symbol)
+    ]);
+    let parts = [];
+    if (quote) {
+      parts.push(`<p><strong>${t.symbol}</strong> (Finnhub): Price <span style="font-family:var(--mono)">${quote.price}</span> &nbsp; Change <span class="${quote.change>=0?'pnl-pos':'pnl-neg'}">${quote.change} (${quote.changePct}%)</span><br>
+      Day range: ${quote.low} – ${quote.high} &nbsp; Open ${quote.open} &nbsp; Prev close ${quote.prevClose}</p>`);
+    }
+    if (daily && daily.length) {
+      parts.push(`<p><strong>Last ${daily.length} daily closes (Alpha Vantage):</strong><br>` +
+        daily.map(d => `${d.date}: ${d.close} (vol ${d.volume.toLocaleString()})`).join('<br>') + `</p>`);
+    }
+    if (news && news.length) {
+      parts.push(`<p><strong>Recent news (MarketAux):</strong></p><ul>` +
+        news.slice(0,4).map(n => `<li>${n.title} <span style="color:var(--text-dim)">(${n.source}${n.sentiment!=null ? ', sent. '+n.sentiment.toFixed(2) : ''})</span></li>`).join('') +
+        `</ul>`);
+    }
+    if (parts.length) marketHtml = parts.join('');
+  } catch (e) {
+    console.warn("Market data for review failed", e);
+  }
+
+  const html = `
+    <h3>1. Trade Summary</h3>
+    <table style="width:100%;font-size:13.5px;margin-bottom:8px">
+      <tr><td style="color:var(--text-muted);padding:4px 0;width:140px">Symbol</td><td><strong>${t.symbol}</strong></td>
+          <td style="color:var(--text-muted);padding:4px 0;width:140px">Direction</td><td>${t.side}</td></tr>
+      <tr><td style="color:var(--text-muted);padding:4px 0">Date</td><td>${t.date}</td>
+          <td style="color:var(--text-muted);padding:4px 0">Session</td><td>${t.session || '—'}</td></tr>
+      <tr><td style="color:var(--text-muted);padding:4px 0">Entry</td><td style="font-family:var(--mono)">${fmt(t.entry,4)}</td>
+          <td style="color:var(--text-muted);padding:4px 0">Exit</td><td style="font-family:var(--mono)">${fmt(t.exit,4)}</td></tr>
+      <tr><td style="color:var(--text-muted);padding:4px 0">Stop</td><td style="font-family:var(--mono)">${t.sl!=null?fmt(t.sl,4):'—'}</td>
+          <td style="color:var(--text-muted);padding:4px 0">Target</td><td style="font-family:var(--mono)">${t.target!=null?fmt(t.target,4):'—'}</td></tr>
+      <tr><td style="color:var(--text-muted);padding:4px 0">Result</td><td class="${isWin?'pnl-pos':'pnl-neg'}">${isWin?'+':''}${fmt(pnl)} (${isWin?'Win':'Loss'})</td>
+          <td style="color:var(--text-muted);padding:4px 0">RR</td><td style="font-family:var(--mono)">${rr ?? '—'}</td></tr>
+      <tr><td style="color:var(--text-muted);padding:4px 0">Risk %</td><td>${t.risk!=null?t.risk+'%':'—'}</td>
+          <td style="color:var(--text-muted);padding:4px 0">Strategy</td><td>${t.strategy || '—'}</td></tr>
+    </table>
+
+    <h3>2. Execution Analysis</h3>
+    <p>Process quality is judged independently of the P&L outcome. A well-executed losing trade is preferable to a poorly-executed winner.</p>
+    <div class="score-row"><div class="score-pill">Execution Score: <span>${execScore}/10</span></div></div>
+    <ul>
+      <li>${t.notes ? 'Entry/exit reasoning was documented.' : 'Limited documentation of entry timing and confirmation.'}</li>
+      <li>Direction: ${t.side}. Without chart context we cannot fully grade location vs structure; use screenshots next time for deeper review.</li>
+    </ul>
+
+    <h3>3. Risk Management</h3>
+    <div class="score-row"><div class="score-pill">Risk Score: <span>${riskScore}/10</span></div></div>
+    <ul>
+      <li>Position size / risk %: ${t.risk!=null ? t.risk+'% of account' : 'Not recorded'}.</li>
+      <li>Stop placement: ${t.sl!=null ? 'Defined at '+fmt(t.sl,4) : 'Missing — critical gap'}.</li>
+      <li>Realized RR: ${rr!=null ? rr : 'Cannot calculate without stop'}.</li>
+    </ul>
+
+    <h3>4. Psychology Analysis</h3>
+    <div class="score-row"><div class="score-pill">Psychology Score: <span>${psychScore}/10</span></div></div>
+    <ul>
+      <li>Logged emotional state: <strong>${t.emotion || 'Not specified'}</strong>.</li>
+      <li>${badEmotions.includes(t.emotion) ? 'This state is frequently associated with impulsive or retaliatory decisions. Pausing before the next trade is recommended.' : 'Emotional baseline appears constructive for decision quality.'}</li>
+    </ul>
+
+    <h3>5. Market Context</h3>
+    ${marketHtml}
+
+    <h3>6. Technical Notes</h3>
+    <p>No chart screenshots were provided with this trade. For richer technical feedback (support/resistance quality, breakout vs pullback, volume confirmation), attach before/after screenshots when logging.</p>
+
+    <h3>7. Mistakes Identified</h3>
+    <ul>${mistakes.map(m=>`<li>${m}</li>`).join('')}</ul>
+
+    <h3>8. Positive Decisions</h3>
+    <ul>${positives.map(p=>`<li>${p}</li>`).join('')}</ul>
+
+    <h3>9. Improvement Suggestions</h3>
+    <ul>${improvements.slice(0,3).map(i=>`<li>${i}</li>`).join('')}</ul>
+
+    <h3>10. Final Verdict</h3>
+    <div class="score-row">
+      <div class="score-pill">Execution <span>${execScore}</span></div>
+      <div class="score-pill">Risk <span>${riskScore}</span></div>
+      <div class="score-pill">Psychology <span>${psychScore}</span></div>
+      <div class="score-pill">Overall <span>${overall}</span></div>
+    </div>
+    <div class="grade grade-${grade[0]}">${grade}</div>
+    <p style="margin-top:12px"><strong>Top 3 Improvements</strong></p>
+    <ol style="padding-left:18px">${improvements.slice(0,3).map(i=>`<li>${i}</li>`).join('')}</ol>
+    <p style="margin-top:16px;color:var(--text-muted);font-size:13px">Remember: the goal is not a perfect grade on every trade — it is consistent process quality over hundreds of trades. Judge the decision, not only the result.</p>
+  `;
+
+  document.getElementById('reviewContent').innerHTML = html;
+  document.getElementById('reviewModal').classList.add('open');
+}
+function closeReviewModal() { document.getElementById('reviewModal').classList.remove('open'); }
+
+/* ---------- AI CHAT (Mode 1) ---------- */
+const BASE_SYSTEM_PROMPT = `You are the official AI Assistant of Aether Journal, a premium AI-powered Trading Journal.
+
+Personality: calm, professional, analytical, unbiased, honest and supportive.
+Never exaggerate confidence. Never pretend to know information you do not have.
+Never give guaranteed returns or promise profit. Always explain uncertainty.
+Never encourage gambling, martingale, all-in trades, unlimited leverage, or revenge trading.
+Always promote risk management, patience, discipline and long-term consistency.
+
+You have FULL access to the user's trading journal (provided in context below).
+When the user asks about their trades (e.g. "mistakes in my 2nd trade today", "why did I lose on AAPL", "my worst session"), use the exact journal data: entry/exit, risk, emotion, notes, strategy, P&L, RR, etc.
+Be specific — quote their numbers, emotions and notes. Do not invent trades.
+
+You can also use any LIVE MARKET DATA provided in the context (price, change, news, sentiment).
+If market data is missing for a symbol, say so clearly instead of inventing prices.
+
+Help with: trading concepts, psychology, risk management, technical & fundamental analysis, journaling, position sizing, stocks, forex, crypto, futures, options, reviewing their personal trades.
+Keep answers clear, structured and practical. Use short paragraphs and bullet points when useful.
+
+MATH & SYMBOLS: For any formula, equation, expectancy, RR calculation, etc., use LaTeX with \\( ... \\) for inline and \\[ ... \\] for display. Do NOT use single $ for math (it conflicts with currency). Write money as plain text, e.g. $1,250 or 1250 USD or €500.
+
+TABLES: When comparing metrics, trades, or stats, prefer markdown tables like:
+| Metric | Value |
+|--------|-------|
+| Win Rate | 55% |
+They will render as real tables in the chat.`;
+
+let chatHistory = [];  // rebuilt each request with fresh journal + market context
+
+function toggleChat() {
+  document.getElementById('chatPanel').classList.toggle('open');
+}
+document.getElementById('chatBubble').addEventListener('click', toggleChat);
+
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const messages = document.getElementById('chatMessages');
+  messages.innerHTML += `<div class="msg msg-user">${escapeHtml(text)}</div>`;
+  input.value = '';
+  messages.scrollTop = messages.scrollHeight;
+
+  messages.innerHTML += `<div class="msg msg-ai" id="typing"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  messages.scrollTop = messages.scrollHeight;
+
+  let reply = "";
+  try {
+    reply = await callOpenRouter(text);
+  } catch (err) {
+    console.error(err);
+    reply = generateAssistantReply(text);
+    if (!OPENROUTER_KEY || OPENROUTER_KEY.includes("YOUR_")) {
+      reply = `⚠️ OpenRouter API key is missing.<br><br>
+Set <code>OPENROUTER_KEY</code> in the file (get key at <a href="https://openrouter.ai/keys" target="_blank" style="color:var(--accent)">openrouter.ai/keys</a>).<br><br>
+Local answer:<br><br>` + reply;
+    } else {
+      reply = `⚠️ OpenRouter error: ${escapeHtml(err.message || "network/CORS")}.<br><br>
+Local answer:<br><br>` + reply;
+    }
+  }
+
+  const typing = document.getElementById('typing');
+  if (typing) typing.remove();
+
+  const aiDiv = document.createElement('div');
+  aiDiv.className = 'msg msg-ai';
+  aiDiv.innerHTML = reply;
+  messages.appendChild(aiDiv);
+
+  // Render KaTeX formulas (uses \( \) and \[ \] so $ currency is safe)
+  if (window.renderMathInElement) {
+    try {
+      renderMathInElement(aiDiv, {
+        delimiters: [
+          { left: '\\[', right: '\\]', display: true },
+          { left: '\\(', right: '\\)', display: false },
+          { left: '$$', right: '$$', display: true }
+        ],
+        throwOnError: false
+      });
+    } catch (e) { console.warn('KaTeX render error', e); }
+  }
+
+  messages.scrollTop = messages.scrollHeight;
+}
+
+async function callOpenRouter(userText) {
+  if (!OPENROUTER_KEY || OPENROUTER_KEY.includes("YOUR_")) {
+    throw new Error("API key not set");
+  }
+
+  // Fresh journal + live market context every message
+  const journalCtx = buildJournalContext();
+  let marketCtx = "";
+  try {
+    marketCtx = await fetchMarketContextForMessage(userText);
+  } catch (e) {
+    console.warn("Market context fetch failed", e);
+  }
+
+  const systemContent = BASE_SYSTEM_PROMPT + "\n\n" + journalCtx + marketCtx;
+
+  // Keep only last few user/assistant turns (system is always rebuilt)
+  const recent = chatHistory.filter(m => m.role !== "system").slice(-12);
+  const messages = [
+    { role: "system", content: systemContent },
+    ...recent,
+    { role: "user", content: userText }
+  ];
+
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${OPENROUTER_KEY}`,
+      "Content-Type": "application/json",
+      "HTTP-Referer": window.location.href || "https://aether-journal.local",
+      "X-Title": "Aether Journal"
+    },
+    body: JSON.stringify({
+      model: "openai/gpt-oss-20b:free",
+      messages,
+      temperature: 0.55,
+      max_tokens: 1200
+    })
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`HTTP ${res.status}: ${errText.slice(0, 150)}`);
+  }
+
+  const data = await res.json();
+  const content = data.choices?.[0]?.message?.content || "No response received.";
+
+  // Store turns (without the huge system prompt)
+  chatHistory.push({ role: "user", content: userText });
+  chatHistory.push({ role: "assistant", content });
+  if (chatHistory.length > 24) chatHistory = chatHistory.slice(-20);
+
+  return formatAIContent(content);
+}
+
+/** Convert AI markdown-ish text to safe HTML (tables, bold, lists, code, newlines) */
+function formatAIContent(raw) {
+  let text = String(raw || "");
+
+  // Escape HTML first
+  text = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  // Markdown tables: lines starting with |
+  text = text.replace(/(^|\n)((?:\|.+\|[ \t]*\n)+)/g, (match, lead, block) => {
+    const rows = block.trim().split("\n").filter(r => r.trim().startsWith("|"));
+    if (rows.length < 2) return match;
+
+    // Detect separator row (|---|---|)
+    let sepIdx = -1;
+    for (let i = 0; i < rows.length; i++) {
+      if (/^\|[\s\-:|]+\|$/.test(rows[i].trim())) { sepIdx = i; break; }
+    }
+
+    const parseRow = (row) =>
+      row.replace(/^\||\|$/g, "").split("|").map(c => c.trim());
+
+    let html = '<div class="ai-table-wrap"><table class="ai-table">';
+    rows.forEach((row, i) => {
+      if (i === sepIdx) return; // skip separator
+      const cells = parseRow(row);
+      const tag = (sepIdx >= 0 && i < sepIdx) || (sepIdx < 0 && i === 0) ? "th" : "td";
+      html += "<tr>" + cells.map(c => `<${tag}>${inlineFormat(c)}</${tag}>`).join("") + "</tr>";
+    });
+    html += "</table></div>";
+    return lead + html;
+  });
+
+  // Bold **text**
+  text = text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  // Italic *text* (avoid matching bold leftovers)
+  text = text.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, "$1<em>$2</em>");
+  // Inline code `code`
+  text = text.replace(/`([^`\n]+)`/g, "<code class=\"ai-code\">$1</code>");
+
+  // Unordered lists
+  text = text.replace(/(^|\n)((?:[ \t]*[-•*][ \t]+.+\n?)+)/g, (m, lead, block) => {
+    const items = block.trim().split("\n").map(l => l.replace(/^[ \t]*[-•*][ \t]+/, "").trim()).filter(Boolean);
+    return lead + "<ul class=\"ai-list\">" + items.map(i => `<li>${inlineFormat(i)}</li>`).join("") + "</ul>";
+  });
+
+  // Ordered lists
+  text = text.replace(/(^|\n)((?:[ \t]*\d+[.)][ \t]+.+\n?)+)/g, (m, lead, block) => {
+    const items = block.trim().split("\n").map(l => l.replace(/^[ \t]*\d+[.)][ \t]+/, "").trim()).filter(Boolean);
+    return lead + "<ol class=\"ai-list\">" + items.map(i => `<li>${inlineFormat(i)}</li>`).join("") + "</ol>";
+  });
+
+  // Headings ### 
+  text = text.replace(/^###[ \t]+(.+)$/gm, "<div class=\"ai-h3\">$1</div>");
+  text = text.replace(/^##[ \t]+(.+)$/gm, "<div class=\"ai-h2\">$1</div>");
+
+  // Paragraphs / newlines
+  text = text.replace(/\n\n+/g, "<br><br>").replace(/\n/g, "<br>");
+
+  return text;
+}
+
+function inlineFormat(s) {
+  return String(s)
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/`([^`]+)`/g, "<code class=\"ai-code\">$1</code>");
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* Local fallback if OpenRouter is unavailable */
+function generateAssistantReply(q) {
+  const lower = q.toLowerCase();
+
+  if (/revenge|tilted|tilt|angry|frustrated after loss/.test(lower))
+    return `Revenge trading is one of the fastest ways to turn a small loss into a large one. After a losing trade, the professional response is to step away, review the process (not the P&L), and only return when emotion is neutral. Consider a hard rule: after 2 consecutive losses, stop for the session.`;
+
+  if (/fomo|fear of missing/.test(lower))
+    return `FOMO usually appears when price is already extended. The market will offer another setup. A useful filter: if the move has already traveled more than 1× your normal risk distance without you, it is often better to wait for a pullback or the next structure rather than chase.`;
+
+  if (/discipline|consistent|consistency/.test(lower))
+    return `Discipline is built by reducing the number of decisions you make under stress. Pre-define: (1) which setups you take, (2) risk per trade, (3) maximum trades per day, (4) when you stop after losses. Then measure adherence weekly — process metrics matter more than daily P&L.`;
+
+  if (/position size|sizing|how much risk|risk per trade/.test(lower))
+    return `A widely used professional baseline is risking 0.5–1% of account equity per trade. Position size = (Account × Risk%) ÷ (Entry − Stop distance). This keeps a string of losses survivable and prevents any single trade from damaging the account significantly.`;
+
+  if (/stop loss|where to put stop/.test(lower))
+    return `Stops belong beyond invalidation of the setup thesis — not at an arbitrary dollar amount. Common approaches: beyond recent swing high/low, beyond a key level, or a multiple of ATR. Once placed, avoid moving the stop further away; that converts a defined risk into an undefined one.`;
+
+  if (/risk.?reward|rr|r:r/.test(lower))
+    return `Risk:Reward (RR) compares potential reward to potential risk. A 2:1 RR means you aim to make twice what you risk. Combined with win rate it determines expectancy. Example: 40% win rate at 2:1 RR is still positive expectancy. Always calculate planned RR before entry.`;
+
+  if (/win rate|expectancy/.test(lower))
+    return `Expectancy ≈ (Win% × Avg Win) − (Loss% × Avg Loss). You can be profitable with a 35% win rate if average wins are large enough relative to losses. Focus on the combination of win rate and RR, not win rate alone.`;
+
+  if (/candlestick|doji|engulfing|pin bar/.test(lower))
+    return `Candlestick patterns are context tools, not standalone signals. A bullish engulfing at support in an uptrend carries more weight than the same pattern in the middle of a range. Always combine with structure, volume, and higher-timeframe bias.`;
+
+  if (/support|resistance|structure/.test(lower))
+    return `Support and resistance are zones, not exact lines. Look for areas where price previously reacted multiple times, confluence with round numbers, moving averages, or prior day high/low. Breaks should ideally be confirmed by volume or a retest.`;
+
+  if (/journal|how to journal|what to write/.test(lower))
+    return `Useful journal fields: setup/strategy name, higher-timeframe bias, entry reason, stop location & why, target & why, emotional state, post-trade grade of the decision (not the result), and one lesson. Over time this data reveals your real edge and your recurring leaks.`;
+
+  if (/guaranteed|sure profit|always win|100%|martingale|double after loss/.test(lower))
+    return `There are no guaranteed profits in trading. Systems that promise certainty or encourage martingale / doubling after losses are incompatible with long-term survival. Focus on positive expectancy, defined risk, and process consistency instead.`;
+
+  if (/crypto|forex|stock|futures|options/.test(lower) && /beginner|start|how to/.test(lower))
+    return `Regardless of market, the sequence is the same: (1) understand the instrument’s mechanics and costs, (2) learn risk management first, (3) paper-trade a simple rules-based approach, (4) journal every trade, (5) only then risk small real capital. Speed of going live is rarely the limiting factor — quality of process is.`;
+
+  return `I can help with risk management, trading psychology, technical concepts, journaling best practices, and reviewing your completed trades.<br><br>
+For full AI answers, add your <strong>OpenRouter API key</strong> in the code (search for OPENROUTER_KEY).<br><br>
+Until then, try asking about: position sizing, FOMO, stop placement, expectancy, or click <strong>Review Trade</strong> on any logged trade.`;
+}
+
+/* ---------- INIT ---------- */
+renderAll();
+</script>
+</body>
+</html>
